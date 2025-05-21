@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Jogo do Dinossauro</title>
+<style>
+  /* Reset and base styling */
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    background: linear-gradient(135deg, #c3ec52 0%, #0ba29d 100%);
+    font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    user-select: none;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    height: 100vh;
+    padding-bottom: 30px;
+  }
+
+  #game-container {
+    position: relative;
+    width: 600px;
+    height: 180px;
+    background: linear-gradient(to bottom, #87ceeb, #1e90ff);
+    border-radius: 20px;
+    box-shadow: 0 8px 15px rgba(0,0,0,0.3);
+    overflow: hidden;
+    border: 4px solid #444;
+  }
+
+  /* Ground */
+  #ground {
+    position: absolute;
+    bottom: 0;
+    width: 200%;
+    height: 8px;
+    background: repeating-linear-gradient(
+      90deg,
+      #654321,
+      #654321 20px,
+      #5a3f1b 20px,
+      #5a3f1b 40px
+    );
+    animation: ground-move 1.5s linear infinite;
+    box-shadow: inset 0 2px 6px #7a5337;
+    z-index: 5;
+  }
+  @keyframes ground-move {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-40px); }
+  }
+
+  /* Dinosaur styling - CSS dino */
+  #dino {
+    position: absolute;
+    bottom: 8px;
+    left: 60px;
+    width: 48px;
+    height: 50px;
+    will-change: bottom;
+    filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.2));
+    z-index: 10;
+  }
+
+  /* Dinosaur parts */
+  #dino .body {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 48px;
+    height: 35px;
+    background: linear-gradient(135deg, #4caf50 0%, #2e7d32 100%);
+    border-radius: 12px 14px 16px 14px;
+    box-shadow:
+      inset 0 5px 8px rgba(255 255 255 / 0.3),
+      inset 0 -5px 8px rgba(0 0 0 / 0.4);
+  }
+
+  #dino .head {
+    position: absolute;
+    bottom: 28px;
+    left: 38px;
+    width: 25px;
+    height: 25px;
+    background: linear-gradient(135deg, #4caf50 0%, #2e7d32 100%);
+    border-radius: 50% 50% 40% 40% / 55% 45% 55% 45%;
+    box-shadow:
+      inset 0 4px 4px rgba(255 255 255 / 0.4),
+      inset 0 -4px 4px rgba(0 0 0 / 0.5);
+    transform: translateX(-8px);
+  }
+
+  #dino .eye {
+    position: absolute;
+    top: 7px;
+    left: 9px;
+    width: 6px;
+    height: 6px;
+    background: white;
+    border-radius: 50%;
+    box-shadow: inset 0 0 2px #000;
+  }
+  #dino .eye::after {
+    content: "";
+    position: absolute;
+    top: 1.5px;
+    left: 1.5px;
+    width: 3px;
+    height: 3px;
+    background: black;
+    border-radius: 50%;
+  }
+
+  #dino .tail {
+    position: absolute;
+    bottom: 5px;
+    left: -18px;
+    width: 24px;
+    height: 14px;
+    background: linear-gradient(135deg, #4caf50 0%, #2e7d32 100%);
+    border-radius: 14px 0 0 14px;
+    transform: rotate(-28deg);
+    transform-origin: right center;
+    box-shadow:
+      inset 0 2px 3px rgba(255 255 255 / 0.3),
+      inset 0 -2px 3px rgba(0 0 0 / 0.3);
+  }
+
+  #dino .leg {
+    position: absolute;
+    bottom: 0;
+    width: 12px;
+    height: 18px;
+    background: linear-gradient(135deg, #357a38 0%, #22571a 100%);
+    border-radius: 5px;
+    box-shadow:
+      inset 0 4px 4px rgba(255 255 255 / 0.4),
+      inset 0 -4px 4px rgba(0 0 0 / 0.6);
+  }
+  #dino .leg.left {
+    left: 8px;
+  }
+  #dino .leg.right {
+    left: 28px;
+  }
+
+  /* Jump animation for dino */
+  .jump {
+    animation: jump 0.5s ease forwards;
+  }
+
+  @keyframes jump {
+    0% { bottom: 8px; }
+    50% { bottom: 115px; }
+    100% { bottom: 8px; }
+  }
+
+  /* Cactus styling */
+  #cactus {
+    position: absolute;
+    bottom: 8px;
+    width: 30px;
+    height: 55px;
+    background: linear-gradient(135deg, #2e7d32 0%, #145214 100%);
+    border-radius: 8px 8px 14px 14px;
+    box-shadow:
+      inset 0 8px 0 0 #4caf50,
+      inset 0 -8px 0 0 #1b3a06;
+    filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.15));
+    will-change: left;
+    z-index: 7;
+  }
+
+  #cactus::before, #cactus::after {
+    content: "";
+    position: absolute;
+    top: 6px;
+    width: 8px;
+    height: 12px;
+    background: linear-gradient(135deg, #66bb6a 0%, #1b4d0e 100%);
+    clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+  }
+  #cactus::before {
+    left: 6px;
+    transform: rotate(-16deg);
+    box-shadow:
+      1px 1px 1px 0 rgba(255 255 255 / 0.18),
+      inset 0 3px 3px rgba(255 255 255 / 0.4);
+  }
+  #cactus::after {
+    right: 6px;
+    top: 18px;
+    transform: rotate(16deg);
+    box-shadow:
+      1px 1px 1px 0 rgba(255 255 255 / 0.18),
+      inset 0 3px 3px rgba(255 255 255 / 0.4);
+  }
+
+  /* Score container */
+  #score-container {
+    position: absolute;
+    right: 20px;
+    top: 15px;
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: #f7f7f7;
+    text-shadow: 0 0 5px rgba(0,0,0,0.5);
+    user-select: none;
+    z-index: 20;
+  }
+
+  /* Message displayed on game over */
+  #message {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 28px;
+    color: #fff;
+    text-align: center;
+    user-select: none;
+    text-shadow: 0 0 8px rgba(0,0,0,0.7);
+    font-weight: 700;
+    z-index: 30;
+    background: rgba(0,0,0,0.4);
+    padding: 20px 35px;
+    border-radius: 15px;
+  }
+
+  /* Game Over style */
+  .game-over #dino {
+    animation: none;
+    filter: grayscale(60%) brightness(0.7);
+  }
+
+</style>
+</head>
+<body>
+<div id="game-container" tabindex="0" aria-label="Jogo do Dinossauro, pressione espaço para pular.">
+  <div id="ground"></div>
+  <div id="dino" aria-live="polite" role="img" aria-label="Dinossauro corredor">
+    <div class="tail"></div>
+    <div class="body"></div>
+    <div class="head">
+      <div class="eye"></div>
+    </div>
+    <div class="leg left"></div>
+    <div class="leg right"></div>
+  </div>
+  <div id="cactus"></div>
+  <div id="score-container" aria-live="polite">0</div>
+  <div id="message" hidden>Fim de jogo!<br />Pressione Espaço para reiniciar</div>
+</div>
+
+<script>
+  (function(){
+    const dino = document.getElementById('dino');
+    const cactus = document.getElementById('cactus');
+    const scoreContainer = document.getElementById('score-container');
+    const message = document.getElementById('message');
+    const gameContainer = document.getElementById('game-container');
+
+    let isJumping = false;
+    let isGameOver = false;
+    let score = 0;
+    let cactusSpeed = 420; // pixels per second
+    let cactusPos = 0; // x-position of cactus in px
+    let lastTime = null;
+    const jumpHeight = 115; // pixels
+    const dinoLeft = 60; // px from left
+    const dinoWidth = 48; // px
+    const dinoHeight = 50; // px
+    const cactusWidth = 30; // px
+    const cactusHeight = 55; // px
+
+    // Set initial cactus position (off screen right)
+    function resetCactus() {
+      cactusPos = gameContainer.offsetWidth;
+      cactus.style.left = cactusPos + 'px';
+    }
+
+    // Jump function with CSS animation
+    function jump() {
+      if(isJumping || isGameOver) return;
+      isJumping = true;
+      dino.classList.add('jump');
+      // Remove jump class after animation duration
+      setTimeout(() => {
+        dino.classList.remove('jump');
+        isJumping = false;
+      }, 500);
+    }
+
+    function resetGame(){
+      score = 0;
+      scoreContainer.textContent = score;
+      message.hidden = true;
+      isGameOver = false;
+      gameContainer.classList.remove('game-over');
+      resetCactus();
+      lastTime = null;
+      cactusSpeed = 420;
+      requestAnimationFrame(gameLoop);
+    }
+
+    // Collision detection: check if dinosaur hits cactus
+    function isCollision() {
+      // Dino bottom position calculated based on jump class and animation timing
+      let dinoBottom = 0;
+      if(isJumping){
+        // We approximate using cubic curve of animation:
+        // For simplicity, if jump class present, Dino is at mid jump height 115px
+        dinoBottom = jumpHeight;
+      }
+      // Horizontal positions of dino and cactus relative to the viewport
+      const dinoRightPos = dinoLeft + dinoWidth;
+      const cactusLeftPos = cactusPos;
+      const cactusRightPos = cactusPos + cactusWidth;
+
+      // Collision occurs if horizontal ranges overlap and dino bottom is low (not over cactus)
+      if(
+        dinoRightPos > cactusLeftPos &&
+        dinoLeft < cactusRightPos &&
+        dinoBottom < cactusHeight - 10
+      ){
+        return true;
+      }
+      return false;
+    }
+
+    function gameOver(){
+      isGameOver = true;
+      message.hidden = false;
+      gameContainer.classList.add('game-over');
+    }
+
+    function updateScore() {
+      score++;
+      scoreContainer.textContent = score;
+      // Speed up cactus every 50 points by increasing pixels per second by 50 up to a max
+      if(score % 50 === 0 && cactusSpeed < 900){
+        cactusSpeed += 50;
+      }
+    }
+
+    // Main game loop (timestamp from rAF)
+    function gameLoop(timestamp){
+      if(!lastTime){
+        lastTime = timestamp;
+        requestAnimationFrame(gameLoop);
+        return;
+      }
+
+      if(isGameOver) return;
+
+      const deltaTime = (timestamp - lastTime) / 1000; // seconds elapsed
+      lastTime = timestamp;
+
+      // Move cactus to left depending on speed
+      cactusPos -= cactusSpeed * deltaTime;
+
+      // When cactus moves off screen left, reset and score++
+      if(cactusPos + cactusWidth < 0){
+        cactusPos = gameContainer.offsetWidth;
+        updateScore();
+      }
+
+      cactus.style.left = cactusPos + 'px';
+
+      // Check collision
+      if(isCollision()){
+        gameOver();
+        return;
+      }
+
+      requestAnimationFrame(gameLoop);
+    }
+
+    // Event listeners for jump and restart
+    window.addEventListener('keydown', (e) => {
+      if(e.code === 'Space' || e.key === ' '){
+        e.preventDefault();
+        if(isGameOver){
+          resetGame();
+        } else {
+          jump();
+        }
+      }
+    });
+
+    // Tap or click for mobile and desktop
+    gameContainer.addEventListener('click', () => {
+      if(isGameOver){
+        resetGame();
+      } else {
+        jump();
+      }
+    });
+
+    // Initialize
+    resetCactus();
+    requestAnimationFrame(gameLoop);
+
+    // Reset cactus position on resize
+    window.addEventListener('resize', () => {
+      cactusPos = gameContainer.offsetWidth;
+      cactus.style.left = cactusPos + 'px';
+    });
+  })();
+</script>
+</body>
+</html>
+
